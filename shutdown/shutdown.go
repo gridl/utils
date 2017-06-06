@@ -12,11 +12,13 @@ import (
 // This function should return status of shutdown and error in case of problems.
 type Callback func() (status string, err error)
 
+// Handler handles shutting process
 type Handler struct {
 	logger          logrus.FieldLogger
 	shutdownSignals []os.Signal
 }
 
+// NewHandler creates an instance of Handler
 func NewHandler(logger logrus.FieldLogger) *Handler {
 	return &Handler{
 		logger:          logger,
@@ -33,22 +35,20 @@ func (h *Handler) RegisterShutdown(shutdown Callback) {
 	interrupt := make(chan os.Signal, 1)
 	signal.Notify(interrupt, h.shutdownSignals...)
 
-	go func() {
-		killSignal := <-interrupt
-		h.logger.Infof("Got signal: %+v", killSignal)
+	killSignal := <-interrupt
+	h.logger.Infof("Got signal: %+v", killSignal)
 
-		// ToDo: interrupt shutdown function if it takes too much time
-		status, err := shutdown()
-		if err != nil {
-			h.logger.Fatalf("Error during shutdown: %s Status: %s\n", err.Error(), status)
-		}
+	// ToDo: interrupt shutdown function if it takes too much time
+	status, err := shutdown()
+	if err != nil {
+		h.logger.Fatalf("Error during shutdown: %s Status: %s\n", err.Error(), status)
+	}
 
-		if killSignal == os.Kill {
-			h.logger.Infof("Service was killed with status: %s", status)
-		} else {
-			h.logger.Infof("Service was terminated by system signal with status: %s", status)
-		}
-	}()
+	if killSignal == os.Kill {
+		h.logger.Infof("Service was killed with status: %s", status)
+	} else {
+		h.logger.Infof("Service was terminated by system signal with status: %s", status)
+	}
 }
 
 // AddShutdownSignal adds a user-defined signals to shutdown.
