@@ -42,6 +42,7 @@ func (h *Handler) RegisterShutdown(shutdown Callback) {
 	status, err := shutdown()
 	if err != nil {
 		h.logger.Fatalf("Error during shutdown: %s Status: %s\n", err.Error(), status)
+		os.Exit(-1)
 	}
 
 	if killSignal == os.Kill {
@@ -49,6 +50,7 @@ func (h *Handler) RegisterShutdown(shutdown Callback) {
 	} else {
 		h.logger.Infof("Service was terminated by system signal with status: %s", status)
 	}
+	os.Exit(0)
 }
 
 // AddShutdownSignal adds a user-defined signals to shutdown.
